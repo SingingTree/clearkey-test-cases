@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Clearkey test cases</title>
+    <script type="text/javascript" src="resources.js"></script>
+</head>
+<body>
+<script>
+    window.onload = setupPage;
+</script>
+<a href="https://github.com/SingingTree/clearkey-test-cases"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+<h1>Clearkey test cases</h1>
+
+<h2>Video</h2>
+<div>
+    Codec + container: <select id="videoCodecContainerSelect">
+        <option value="none">None</option>
+        <option value="h264Mp4">h264 + mp4</option>
+        <option value="vp9Webm">VP9 + webm</option>
+    </select>
+    Encryption scheme: <select id="videoEncryptionSchemeSelect">
+        <option id="unencrypted">Unencrypted</option>
+        <option id="cenc">cenc</option>
+        <option id="cbcs">cbcs</option>
+    </select>
+</div>
+<div>
+    Downloaded <progress id="videoProgress" max="100" value="0"></progress>
+</div>
+
+<h2>Audio</h2>
+<div>
+    Codec + container: <select id="audioCodecContainerSelect">
+        <option value="none">None</option>
+        <option value="aac4Mp4">AAC + mp4</option>
+        <option value="opusWebm">Opus + webm</option>
+    </select>
+    Encryption scheme: <select id="audioEncryptionSchemeSelect">
+        <option id="unencrypted">Unencrypted</option>
+        <option id="cenc">cenc</option>
+        <option id="cbcs">cbcs</option>
+    </select>
+</div>
+
+<div>
+    Downloaded <progress id="audioProgress" max="100" value="0"></progress>
+</div>
+
+</div>
+    <video id="mediaElement" controls></video>
+</div>
+
+<div id="logDiv"></div>
+</body>
+</html>
+
+
+
