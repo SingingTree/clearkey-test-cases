@@ -20,8 +20,8 @@ function log(msg) {
  * the 'updateend' event.
  */
 function loadSourceBuffer(mediaSource, mediaURL, mediaMimeType, progressCallback) {
-  log("Loading: " + mediaURL);
-  log("Media source state: " + mediaSource.readyState); // open
+  log("loadSourceBuffer: Loading: " + mediaURL);
+  log("loadSourceBuffer: Media source state: " + mediaSource.readyState); // open
   let sourceBuffer = mediaSource.addSourceBuffer(mediaMimeType);
   // Promise to resolve when our source buffer has updateend
   let fetchedPromise = new Promise(resolve => {
@@ -73,7 +73,7 @@ function updateAudioProgress(e) {
  * @param onProgressFunc - A callback for when the xhr emits 'progress' events
  */
 function fetchArrayBuffer(url, onLoadFunc, onProgressFunc) {
-  log("Fetching from URL: " + url);
+  log("fetchArrayBuffer: Fetching from URL: " + url);
   let xhr = new XMLHttpRequest();
   xhr.onprogress = onProgressFunc;
   xhr.open("get", url);
@@ -135,7 +135,7 @@ async function setupMediaKeys(media, config) {
  * @return The promise created by MediaKeySession.generateRequest
  */
 function encryptedEventHandler(e) {
-  log("Got encrypted event");
+  log("encryptedEventHandler: Got encrypted event");
 
   let media = e.target;
   let session = media.mediaKeys.createSession();
@@ -153,7 +153,7 @@ function generateLicense(message) {
   let request = JSON.parse(new TextDecoder().decode(message));
   // We expect to only have one key requested at a time
   if (request.kids.length != 1) {
-    log(`Got more than one key requested (got ${request.kids.length})! We don't expect this!`);
+    log(`generateLicense: Got more than one key requested (got ${request.kids.length})! We don't expect this!`);
   }
 
   // Create our clear key object, looking up the key based on the key id
@@ -184,11 +184,15 @@ function messageHandler(e) {
 /**
  * Updates the video element to play currently selected media.
  */
-function refreshMedia() {
+async function refreshMedia() {
   const h264MimeType = "video/mp4;codecs=\"avc1.640028\""; // High level 4
   const aacMimeType = "audio/mp4;codecs=\"mp4a.40.2\""; // AAC-LC
   const vp9MimeType = "video/webm;codecs=\"vp9\"";
   const opusMimeType = "audio/webm;codecs=\"opus\"";
+
+  // Reset progress bars
+  document.getElementById("videoProgress").value = 0;
+  document.getElementById("audioProgress").value = 0;
 
   // Reset the media element
   let mediaElement = document.getElementById("mediaElement");
@@ -220,7 +224,7 @@ function refreshMedia() {
       videoMimeType = vp9MimeType;
       break;
     default:
-      log(`Video codec + container selection has invalid index: (${videoCodecContainerSelect.selectedIndex})!`);
+      log(`refreshMedia: Video codec + container selection has invalid index: (${videoCodecContainerSelect.selectedIndex})!`);
       break;
   }
 
@@ -234,7 +238,7 @@ function refreshMedia() {
         break;
       case 2: // cbcs
         if (videoPath == "media/webm") {
-          log("webm does not have a cbcs mode, this won't work");
+          log("refreshMedia: webm does not have a cbcs mode, treating as no video!");
           videoPath = null;
           videoExtension = null;
           videoMimeType = null;
@@ -243,7 +247,7 @@ function refreshMedia() {
         }
         break;
       default:
-        log(`Video encryption selection has invalid index: (${videoCodecContainerSelect.selectedIndex})!`);
+        log(`refreshMedia: Video encryption selection has invalid index: (${videoCodecContainerSelect.selectedIndex})!`);
         break;
     }
   }
@@ -268,7 +272,7 @@ function refreshMedia() {
       audioMimeType = opusMimeType;
       break;
     default:
-      log(`Audio codec + container selection has invalid index: (${audioCodecContainerSelect.selectedIndex})!`);
+      log(`refreshMedia: Audio codec + container selection has invalid index: (${audioCodecContainerSelect.selectedIndex})!`);
       break;
   }
 
@@ -281,8 +285,8 @@ function refreshMedia() {
       audioPath += "/cenc/big-buck-bunny-trailer-audio-cenc" + audioExtension;
         break;
       case 2: // cbcs
-        if (videoPath == "media/webm") {
-          log("webm does not have a cbcs mode, this won't work");
+        if (audioPath == "media/webm") {
+          log("refreshMedia: webm does not have a cbcs mode, treating as no audio!");
           audioPath = null;
           audioExtension = null;
           audioMimeType = null;
@@ -291,7 +295,7 @@ function refreshMedia() {
         }
         break;
       default:
-      log(`Audio encryption selection has invalid index: (${audioCodecContainerSelect.selectedIndex})!`);
+      log(`refreshMedia: Audio encryption selection has invalid index: (${audioCodecContainerSelect.selectedIndex})!`);
       break;
     }
   }
@@ -318,41 +322,34 @@ function refreshMedia() {
   ];
 
   let mediaSource = new MediaSource();
-  log("Media source state: " + mediaSource.readyState); // Should be closed
+  log("refreshMedia: Media source state: " + mediaSource.readyState); // Should be closed
   
   mediaElement.addEventListener("error", e => {
-    log("Got error!: " + e);
+    log("mediaElement error handler: Got error!: " + e);
   });
 
-  setupMediaKeys(mediaElement, config).then(
-    () => {
-      mediaElement.addEventListener("encrypted", encryptedEventHandler);
-      mediaElement.src = URL.createObjectURL(mediaSource);
-      mediaSource.addEventListener("sourceopen", () => {
-        let promises = [];
-        if (videoPath) {
-          promises.push(
-            loadSourceBuffer(mediaSource, videoPath,
-              videoMimeType, updateVideoProgress)
-          )
-        }
-        if (audioPath) {
-          promises.push(
-            loadSourceBuffer(mediaSource, audioPath,
-              audioMimeType, updateAudioProgress)
-          );
-        }
-        Promise.all(promises).then(() => {
-          mediaSource.endOfStream();
-          log("Media source state: " + mediaSource.readyState); // Should be ended
-          mediaElement.play();
-        });
-      });
-    },
-    failureReason => {
-      log("Failed to setup media keys: " + failureReason.message);
+  await setupMediaKeys(mediaElement, config)
+  mediaElement.addEventListener("encrypted", encryptedEventHandler);
+  mediaElement.src = URL.createObjectURL(mediaSource);
+  mediaSource.addEventListener("sourceopen", async () => {
+    let promises = [];
+    if (videoPath) {
+      promises.push(
+        loadSourceBuffer(mediaSource, videoPath,
+          videoMimeType, updateVideoProgress)
+      )
     }
-  );
+    if (audioPath) {
+      promises.push(
+        loadSourceBuffer(mediaSource, audioPath,
+          audioMimeType, updateAudioProgress)
+      );
+    }
+    await Promise.all(promises);
+    mediaSource.endOfStream();
+    log("mediaSource sourceopen hanlder: Media source state: " + mediaSource.readyState); // Should be ended
+    mediaElement.play();
+  });
 }
 
 /**
