@@ -328,7 +328,13 @@ async function refreshMedia() {
     log("mediaElement error handler: Got error!: " + e);
   });
 
-  await setupMediaKeys(mediaElement, config)
+  try {
+    await setupMediaKeys(mediaElement, config)
+  } catch (e) {
+    // Browsers that don't impl clearkey will fail here
+    log(`refreshMedia: setupMediaKeys failed with: ${e}`);
+    return;
+  }
   mediaElement.addEventListener("encrypted", encryptedEventHandler);
   mediaElement.src = URL.createObjectURL(mediaSource);
   mediaSource.addEventListener("sourceopen", async () => {
@@ -347,7 +353,7 @@ async function refreshMedia() {
     }
     await Promise.all(promises);
     mediaSource.endOfStream();
-    log("mediaSource sourceopen hanlder: Media source state: " + mediaSource.readyState); // Should be ended
+    log("mediaSource sourceopen handler: Media source state: " + mediaSource.readyState); // Should be ended
     mediaElement.play();
   });
 }
