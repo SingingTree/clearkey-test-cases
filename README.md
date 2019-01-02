@@ -31,14 +31,12 @@ Generating the encrypted media is done via the following, with shaka-packager:
 - mp4: `packager-win in=big-buck-bunny-trailer-video.mp4,stream=video,output=big-buck-bunny-trailer-video-cenc.mp4, in=big-buck-bunny-trailer-audio.mp4,stream=audio,output=big-buck-bunny-trailer-audio-cenc.mp4 --protection_scheme cenc --enable_raw_key_encryption --keys label=:key_id=0123456789abcdef0123456789abcdef:key=fedcba9876543210fedcba9876543210`
 - webm: `packager-win in=big-buck-bunny-trailer-video.webm,stream=video,output=big-buck-bunny-trailer-video-cenc.webm, in=big-buck-bunny-trailer-audio.webm,stream=audio,output=big-buck-bunny-trailer-audio-cenc.webm --protection_scheme cenc --enable_raw_key_encryption --keys label=:key_id=0123456789abcdef0123456789abcdef:key=fedcba9876543210fedcba9876543210`
 
-
 ### cbcs
 
 Generating the encrypted media is done via the following:
 
 - mp4: `packager-win in=big-buck-bunny-trailer-video.mp4,stream=video,output=big-buck-bunny-trailer-video-cbcs.mp4, in=big-buck-bunny-trailer-audio.mp4,stream=audio,output=big-buck-bunny-trailer-audio-cbcs.mp4 --protection_scheme cbcs --enable_raw_key_encryption --keys label=:key_id=0123456789abcdef0123456789abcdef:key=fedcba9876543210fedcba9876543210 -iv 11223344556677889900112233445566`
 - webm doesn't support cbc style encryption.
-
 
 # License
 
